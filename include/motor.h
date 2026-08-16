@@ -11,6 +11,14 @@ class motor {
     int in1Pin;
     int in2Pin;
 
+
+
+
+
+
+
+
+    
 // NEU: Variablen für den Soft-Start
     int aktuellerWert;      // Wo der Motor gerade steht (Startet bei 2047 = Stopp)
     int zielWert;           // Wo der Motor hin soll
