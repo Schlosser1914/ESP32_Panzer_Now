@@ -12,6 +12,8 @@ private:
     uint8_t m0Pin;
     uint8_t m1Pin;
     uint8_t m2Pin;
+
+    
     uint8_t faultPin; // Neu: Pin für die Fehlerüberwachung
     
     long currentStepPosition;
