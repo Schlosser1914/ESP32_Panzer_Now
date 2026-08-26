@@ -1,9 +1,12 @@
-
 #ifndef MOTOR_H
 #define MOTOR_H
+
 #include <Arduino.h>
 
-const int DEADZONE = 240;
+
+// max_P = also das maximale signal anm pwm was man senden kann 
+// dz = deadzone dammit kann man steurn von en potties dammit wenn man in der mitte ist das es stillbleibt 
+
 
 class motor {
   private:
@@ -11,26 +14,19 @@ class motor {
     int in1Pin;
     int in2Pin;
 
+    int aktuellerWert;
+    int zielWert;
+    unsigned long letzteZeit;
 
-
-
-
-
-
-
-    
-// NEU: Variablen für den Soft-Start
-    int aktuellerWert;      // Wo der Motor gerade steht (Startet bei 2047 = Stopp)
-    int zielWert;           // Wo der Motor hin soll
-    unsigned long letzteZeit; // Für den Millisekunden-Timer (Ramping-Geschwindigkeit)
-
+    int deadzone;
+    int max_pwm;
+    int ramp_step;
+    int ramp_delay_ms;
 
   public:
-    // Der neue Konstruktor verlangt 3 Pins
-    motor(int pwm, int in1, int in2); 
-    void setspeed(int wert);
-    void update();          // NEU: Diese Funktion rechnet das weiche Anfahren
+    motor(int pwm, int in1, int in2, int dz = 240, int max_p = 1200); 
+    void setSpeed(int wert);
+    void update();          
 };
-
 
 #endif
