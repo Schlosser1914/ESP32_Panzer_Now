@@ -50,3 +50,72 @@ bool nema::checkFault() {
     }
     return false; // Kein Fehler
 }
+
+void nema::setMicrostepping(int multiplier) {
+    microsteppingMultiplier = multiplier;
+    switch (multiplier) {
+        case 1:  
+            digitalWrite(m0Pin, LOW); digitalWrite(m1Pin, LOW); digitalWrite(m2Pin, LOW); break;
+        case 8:  
+            digitalWrite(m0Pin, HIGH); digitalWrite(m1Pin, HIGH); digitalWrite(m2Pin, LOW); break;
+        case 32: 
+            digitalWrite(m0Pin, HIGH); digitalWrite(m1Pin, HIGH); digitalWrite(m2Pin, HIGH); break;
+        default:
+            microsteppingMultiplier = 1;
+            digitalWrite(m0Pin, LOW); digitalWrite(m1Pin, LOW); digitalWrite(m2Pin, LOW); break;
+    }
+}
+
+void nema::stepMotor(int steps, bool direction) {
+    digitalWrite(dirPin, direction ? HIGH : LOW);
+    
+    for (int i = 0; i < steps; i++) {
+        if (checkFault()) {
+            break; // Hardware-Schutz: Abbruch bei Fehler
+        }
+
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(500); // Statische Verzögerung (Geschwindigkeit)
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(500); 
+    }
+}
+
+
+
+void nema::moveToDegree(int degree) {
+    // 1. Winkel-Normalisierung (0-359 Grad)
+    degree = degree % 360;
+    if (degree < 0) degree += 360;
+
+    // 2. Umrechnung in Schritte basierend auf aktuellem Microstepping
+    long totalStepsPerRev = baseStepsPerRev * microsteppingMultiplier;
+    long targetStep = (long)degree * totalStepsPerRev / 360;
+
+    // 3. Differenz berechnen
+    long difference = targetStep - currentStepPosition;
+
+    // 4. Kürzesten Weg ermitteln
+    long halfRev = totalStepsPerRev / 2;
+    if (difference > halfRev) {
+        difference -= totalStepsPerRev;
+    } else if (difference < -halfRev) {
+        difference += totalStepsPerRev;
+    }
+
+    if (difference == 0) return; // Ziel bereits erreicht
+
+    bool direction = (difference > 0);
+    
+    enable(); // Motor aktivieren
+    
+    stepMotor(abs(difference), direction);
+    
+    disable(); // Motor deaktivieren zur Stromeinsparung
+    
+    // 5. Interne Position aktualisieren und im 360-Grad-Bereich halten
+    currentStepPosition = (currentStepPosition + difference) % totalStepsPerRev;
+    if (currentStepPosition < 0) {
+        currentStepPosition += totalStepsPerRev;
+    }
+}
